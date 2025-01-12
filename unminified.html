@@ -1,0 +1,111 @@
+<center>
+    <div id="coin"></div>
+    <br>
+    <div class="board">
+    </div>
+</center>
+<script>
+let board = document.querySelector('.board');
+let coin = document.querySelector('#coin');
+let playerState = "red";
+let win = false;
+
+for (let i = 0; i < 42; i++) {
+    let cell = document.createElement('div');
+    cell.classList.add('cell');
+
+    cell.setAttribute('col', i % 7);
+    cell.setAttribute('row', Math.floor(i / 7));
+    cell.setAttribute('player', 'none');
+
+    cell.addEventListener("mouseover", () => {
+        if (win) return;
+        coin.setAttribute("style", `background-color: ${playerState}; transform: translateX(${-(3-Number(cell.getAttribute('col')))*90}px); opacity: 1;`);
+    })
+
+    cell.addEventListener('mouseout', () => {
+        coin.setAttribute("style", `opacity: 0;`);
+    })
+
+    cell.addEventListener("click", () => {
+        if (win) return;
+        let col = Number(cell.getAttribute('col'));
+        let row = Number(cell.getAttribute('row'));
+        let player = cell.getAttribute('player');
+
+        let nextRow = 0;
+        while (nextRow < 5 && board.querySelector(`[col="${col}"][row="${nextRow+1}"]`).getAttribute('player') === 'none') nextRow++;
+
+        let nextCell = board.querySelector(`[col="${col}"][row="${nextRow}"]`);
+        nextCell.setAttribute('player', playerState);
+        for (let i=0; i<(nextRow+1)*90+40; i++) {
+            setTimeout(() => {
+                coin.setAttribute("style", `background-color: ${playerState}; transform: translateX(${-(3-col)*90}px) translateY(${i}px); opacity: 1;`);
+            }, i*2);
+        }
+        setTimeout(() => {
+            coin.setAttribute("style", `opacity: 0;`);
+            nextCell.style.backgroundColor = playerState;
+            playerState = playerState === 'red' ? 'yellow' : 'red';
+            checkWinner();
+        }, ((nextRow+1)*90+40)*2);
+    })
+
+    board.appendChild(cell);
+}
+
+const checkWinner = () => {
+    let cells = board.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        let col = Number(cell.getAttribute('col'));
+        let row = Number(cell.getAttribute('row'));
+        let colors = [cell];
+        const declareWin = () => {
+            if (colors.length === 4) {
+            if (colors[0].getAttribute('player') !== 'none') {
+                colors.forEach(cell => {
+                    cell.style.backgroundColor = 'black';
+                })
+                alert(`${colors[0].getAttribute('player')} wins!`);
+                win = true;
+            }
+        }
+        colors = [cell];
+        }
+        [[1, 0], [0, 1], [1, 1], [-1, 1]].forEach(config => {
+            for (let i=1; i<4; i++) {
+                if (0 <= col + i*config[0] && col + i*config[0] < 7 && 0 <= row + i*config[1] && row + i*config[1] < 6) {
+                    let c = board.querySelector(`[col="${col+i*config[0]}"][row="${row+i*config[1]}"]`);
+                    if (c.getAttribute('player') == cell.getAttribute('player')) colors.push(c);
+                }
+                else break;
+            }
+            declareWin();
+        })
+    })
+}
+</script>
+<style>
+    .board {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        grid-gap: 10px;
+        width: 630px;
+        height: 540px;
+        border-radius: 10px;
+        background-color: #1c62f1;
+        padding: 10px;
+    }
+    #coin {
+        width: 90px;
+        height: 90px; 
+        border-radius: 50%; 
+        opacity: 0;
+    }
+
+    .cell {
+        cursor: pointer;
+        border-radius: 50%;
+        background-color: white;
+    }
+</style>
